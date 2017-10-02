@@ -73,3 +73,69 @@ Project requirements are for the server to only allow incoming connections for S
 2. Mod_wsgi is an Apache HTTP server mod that enables Apache to serve Flask applications. Install *mod_wsgi* with the following command: `$ sudo apt-get install libapache2-mod-wsgi python-dev`.
 3. Enable *mod_wsgi*: `$ sudo a2enmod wsgi`.
 3. `$ sudo service apache2 start`.
+
+### 10 - Install and Configure Git
+
+1. `$ sudo apt-get install git`.
+2. Configure your username: `$ git config --global user.name <username>`.
+3. Configure your email: `$ git config --global user.email <email>`.
+
+### 11 - Clone the Catalog app from Github
+
+1. `$ cd /var/www`. Then: `$ sudo mkdir catalog`.
+2. Change owner for the *catalog* folder: `$ sudo chown -R grader:grader catalog`.
+3. Move inside that newly created folder: `$ cd /catalog` and clone the catalog repository from Github: `$ git clone https://github.com/iliketomatoes/catalog.git catalog`.
+4. Make a *catalog.wsgi* file to serve the application over the *mod_wsgi*. That file should look like this:
+
+```python
+import sys
+import logging
+logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0, "/var/www/catalog/")
+
+from catalog import app as application
+```
+
+### 12 - Install virtual environment, Flask and the project's dependencies
+
+1. Install *pip*, the tool for installing Python packages: `$ sudo apt-get install python-pip`.
+2. If *virtualenv* is not installed, use *pip* to install it using the following command: `$ sudo pip install virtualenv`.
+3. Move to the *catalog* folder: `$ cd /var/www/catalog`. Then create a new virtual environment with the following command: `$ sudo virtualenv venv`.
+4. Activate the virtual environment: `$ source venv/bin/activate`.
+5. Change permissions to the virtual environment folder: `$ sudo chmod -R 777 venv`.
+6. Install Flask: `$ pip install Flask`.
+7. Install all the other project's dependencies: `$ pip install bleach httplib2 request oauth2client sqlalchemy psycopg2`. 
+
+Sources: [DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-deploy-a-flask-application-on-an-ubuntu-vps), [Dabapps](http://www.dabapps.com/blog/introduction-to-pip-and-virtualenv-python/).
+
+### 13 - Configure and enable a new virtual host
+
+1. Create a virtual host conifg file: `$ sudo nano /etc/apache2/sites-available/catalog.conf`.
+2. Paste in the following lines of code:
+```
+<VirtualHost *:80>
+    ServerName 35.163.210.85
+    ServerAlias 
+    ServerAdmin admin@35.163.210.85
+    WSGIDaemonProcess catalog python-path=/var/www/catalog:/var/www/catalog/venv/lib/python2.7/site-packages
+    WSGIProcessGroup catalog
+    WSGIScriptAlias / /var/www/catalog/catalog.wsgi
+    <Directory /var/www/catalog/catalog/>
+        Order allow,deny
+        Allow from all
+    </Directory>
+    Alias /static /var/www/catalog/catalog/static
+    <Directory /var/www/catalog/catalog/static/>
+        Order allow,deny
+        Allow from all
+    </Directory>
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    LogLevel warn
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+```
+* The **WSGIDaemonProcess** line specifies what Python to use and can save you from a big headache. In this case we are explicitly saying to use the virtual environment and its packages to run the application.
+
+3. Enable the new virtual host: `$ sudo a2ensite catalog`.
+
+Source: [DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-run-django-with-mod_wsgi-and-apache-with-a-virtualenv-python-environment-on-a-debian-vps).
