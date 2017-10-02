@@ -179,7 +179,7 @@ Source: [eHowStuff](http://www.ehowstuff.com/how-to-install-and-use-glances-syst
 
 1. `$ sudo service apache2 restart`.
 
-### 17 - Install system monitor tools
+### 17 - Install system monitor tools.
 
 1. `$ sudo apt-get update`.
 2. `$ sudo apt-get install glances`.
