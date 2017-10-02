@@ -139,3 +139,48 @@ Sources: [DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-
 3. Enable the new virtual host: `$ sudo a2ensite catalog`.
 
 Source: [DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-run-django-with-mod_wsgi-and-apache-with-a-virtualenv-python-environment-on-a-debian-vps).
+
+### 14 - Install and configure PostgreSQL
+
+1. Install some necessary Python packages for working with PostgreSQL: `$ sudo apt-get install libpq-dev python-dev`.
+2. Install PostgreSQL: `$ sudo apt-get install postgresql postgresql-contrib`.
+3. Postgres is automatically creating a new user during its installation, whose name is 'postgres'. That is a tusted user who can access the database software. So let's change the user with: `$ sudo su - postgres`, then connect to the database system with `$ psql`.
+4. Create a new user called 'catalog' with his password: `# CREATE USER catalog WITH PASSWORD 'postgres';`.
+5. Give *catalog* user the CREATEDB capability: `# ALTER USER catalog CREATEDB;`.
+6. Create the 'catalog' database owned by *catalog* user: `# CREATE DATABASE catalog WITH OWNER catalog;`.
+7. Connect to the database: `# \c catalog`.
+8. Revoke all rights: `# REVOKE ALL ON SCHEMA public FROM public;`.
+9. Lock down the permissions to only let *catalog* role create tables: `# GRANT ALL ON SCHEMA public TO catalog;`.
+10. Log out from PostgreSQL: `# \q`. Then return to the *grader* user: `$ exit`.
+11. Inside the Flask application, the database connection is now performed with: 
+```python
+engine = create_engine('postgresql://catalog:postgres@localhost/catalog')
+```
+12. Setup the database with: `$ python /var/www/catalog/catalog/database_setup.py`.
+13. To prevent potential attacks from the outer world we double check that no remote connections to the database are allowed. Open the following file: `$ sudo nano /etc/postgresql/9.3/main/pg_hba.conf` and edit it, if necessary, to make it look like this: 
+```
+local   all             postgres                                peer
+local   all             all                                     peer
+host    all             all             127.0.0.1/32            md5
+host    all             all             ::1/128                 md5
+```
+Source: [DigitalOcean](https://www.digitalocean.com/community/tutorials/how-to-secure-postgresql-on-an-ubuntu-vps).
+
+### 15 - Install system monitor tools
+
+1. `$ sudo apt-get update`.
+2. `$ sudo apt-get install glances`.
+3. To start this system monitor program just type this from the command line: `$ glances`.
+4. Type `$ glances -h` to know more about this program's options.
+
+Source: [eHowStuff](http://www.ehowstuff.com/how-to-install-and-use-glances-system-monitor-in-ubuntu/).
+
+### 16 - Restart Apache to launch the app
+
+1. `$ sudo service apache2 restart`.
+
+## ACKNOWLEDGMENTS
+
+1. [kssawicki] - (https://github.com/kssawicki/) (Being there on slack in the middle of the night when no one else was.)
+2. [iliketomatoes] - (https://github.com/iliketomatoes/linux_server_configuration)
+3. [stueken] - (https://github.com/stueken/)
